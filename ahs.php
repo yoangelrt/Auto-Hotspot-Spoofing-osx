@@ -21,12 +21,22 @@ if(strpos($tsharkcheck,'tshark is') === false) {
 }
 $macaddr_vendors = json_decode(file_get_contents("macaddr.json"),TRUE);
 
-function is_connected()
+function txt_mac($mac)
+{
+        $myFile = "mac.txt";
+        $fh = fopen($myFile, 'a');
+        fwrite($fh, $mac." - Conected \n");
+        fclose($fh);
+}
+
+
+function is_connected($mac)
 {
     $connected = @fsockopen("www.google.com", 80); 
                                         //website, port  (try 80 or 443)
     if ($connected){
         $is_conn = "\e[1;37;42mConected ✔\e[0m"; //action when connected
+        txt_mac($mac);
         fclose($connected);
     }else{
         $is_conn = "\e[1;37;41mDisconect ✘\e[0m"; //action in connection failure
@@ -50,7 +60,7 @@ foreach ($a_arg as $key => $arg){
 #var_dump($param);
 #echo $param[aaa];
 echo("|===============================CAPTURING PACK===================================|\n");
-exec("tshark -a duration:$param[time] -I -i en0 -w capture-output.pcap");
+exec("tshark -a duration:$param[time] -I -i $param[interface] -w capture-output.pcap");
 
 echo("\n|==============================READ PACK FOR MACs================================|");
 exec("tshark -n -r capture-output.pcap 'wlan.ssid == $param[ssid] and wlan.ra[0:2] != ff:ff and wlan.ra[4:2] != ff:ff' | grep -Eo '→ [0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}' | perl -pe 's/→ //g' | sort ",$avl_mac);
@@ -87,8 +97,8 @@ echo("[".$mac_for."] ");
 sleep(1);
 exec("sudo airport -z");
 sleep(1);
-exec("sudo ifconfig en0 ether ".$mac_for);
-$now_mac_addr = str_replace("\n","",shell_exec('ifconfig en0 ether | grep -Eo "[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}"'));
+exec("sudo ifconfig $param[interface] ether ".$mac_for);
+$now_mac_addr = str_replace("\n","",shell_exec("ifconfig $param[interface] ether | grep -Eo '[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}'"));
 sleep(1);
 if ($now_mac_addr == $mac_for)
 {
@@ -98,7 +108,7 @@ if ($now_mac_addr == $mac_for)
         echo $now_mac_addr;
     exit;
     }
-exec("networksetup -setairportnetwork en0 $param[ssid]",$output2);
+exec("networksetup -setairportnetwork $param[interface] $param[ssid]",$output2);
 if(!strpos($output2[0],'Could not')) {
 echo("\e[1;37;42mSSID ✔\e[0m ");
 }else {echo("\e[1;37;41mSSID - Error ✘\e[0m ");}
@@ -106,13 +116,13 @@ sleep(1);
 echo("IP: ");
 while ($yiaddr == "") {
 #echo(".");
-$yiaddr = str_replace("\n","",shell_exec("ipconfig getpacket en0 | grep 'yiaddr = ' | grep -Eo '[0-9.]{1,100}'"));
+$yiaddr = str_replace("\n","",shell_exec("ipconfig getpacket $param[interface] | grep 'yiaddr = ' | grep -Eo '[0-9.]{1,100}'"));
 flush();	    
 sleep(2);		    
 	    }
 echo ("\e[1;37;42m".$yiaddr."\e[0m ");
 sleep(1);
-$is_conn = is_connected();
+$is_conn = is_connected($mac_for);
 echo(" ".$is_conn."\n");
 $i++;
 sleep(1);

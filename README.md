@@ -1,2 +1,3 @@
 # Auto Hotspot Spoofing osx
-sudo php ahs.php time=15 ssid=xfinitywifi
+sudo php ahs.php time=15 ssid=xfinitywifi interface=en0
+ok
