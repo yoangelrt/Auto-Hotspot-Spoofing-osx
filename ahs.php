@@ -48,7 +48,7 @@ function is_connected($mac)
 $a_arg = $argv;
 $param = array();
 if (count($a_arg) == 1) {
-    echo("\n Argument Lost \n");
+    echo("\n Argument Lost \n EXAMPLE time=15 ssid=xfinitywifi interface=en0");
     exit;
 }
 foreach ($a_arg as $key => $arg){
